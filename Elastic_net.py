@@ -88,7 +88,7 @@ if int(input('Plot histogram (0/1)? ')):
 ## Fit elastic net regression
 xx, yy = shuffle(xx, yy, random_state=0)
 x_train,x_test,y_train,y_test = train_test_split(xx, yy, test_size=0.2)
-l1_ratios =  np.arange(1,0,-0.1)
+l1_ratios = np.arange(1,0,-0.1)
 cv = KFold(n_splits=10, shuffle=True)
 model = ElasticNetCV(l1_ratio=l1_ratios, cv=cv, n_jobs=-1)
 print('================================')
