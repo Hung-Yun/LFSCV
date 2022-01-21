@@ -8,12 +8,12 @@ import numpy as np
 import pandas as pd
 
 box_path    = '/Users/hungyunlu/Library/CloudStorage/Box-Box'
-data_path   = os.path.join(box_path,'Hung-Yun Lu Research File/Data/FSCV/EN_data')
-fscv_path   = os.path.join(box_path,'Hung-Yun Lu Research File/Data/FSCV/FSCV_data')
-model_path  = os.path.join(box_path,'Hung-Yun Lu Research File/Data/FSCV/EN_model')
-eval_path   = os.path.join(box_path,'Hung-Yun Lu Research File/Data/FSCV/EN_model/Model_evaluation')
 note_path   = os.path.join(box_path,'Hung-Yun Lu Research File/Projects/_LabNote')
 script_path = os.path.join(box_path,'Hung-Yun Lu Research File/Projects/FSCV/Script')
+data_path   = os.path.join(script_path,'Data/EN_data')
+fscv_path   = os.path.join(script_path,'Data/FSCV_data')
+model_path  = os.path.join(script_path,'Data/EN_model')
+eval_path   = os.path.join(script_path,'Data/EN_model/Model_evaluation')
 
 if os.getcwd() != script_path:
     os.chdir(script_path)
