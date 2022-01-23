@@ -55,6 +55,8 @@ def prepare(var):
     print('================================')
     print(f'Start preparing {var}')
     used_sessions = []
+    # Current default: use all sessions.
+    # Future: decide sessions after clustering.
     for session in range(len(calibration)):
         date      = calibration.iloc[session].loc['Date']
         electrode = calibration.iloc[session].loc['Electrode']

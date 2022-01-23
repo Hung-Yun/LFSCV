@@ -25,10 +25,11 @@ page = utils.ask_page()
 conc = np.sort(inputs[page][seq])
 
 # Save info into _Calibration_log file
-wb = xw.Book(os.path.join(note_path,'_Calibration_log.xlsx'))
-sheet = wb.sheets[page]
-row = str(sheet.range('A' + str(sheet.cells.last_cell.row)).end('up').row + 1)
-sheet.range('A'+row).value = today
-sheet.range('B'+row).value = input('Which electrode? ')
-sheet.range('C'+row).value = conc
-wb.save()
+if int(input('Write in excel file (0/1)? ')):
+    wb = xw.Book(os.path.join(note_path,'_Calibration_log.xlsx'))
+    sheet = wb.sheets[page]
+    row = str(sheet.range('A' + str(sheet.cells.last_cell.row)).end('up').row + 1)
+    sheet.range('A'+row).value = today
+    sheet.range('B'+row).value = input('Which electrode? ')
+    sheet.range('C'+row).value = conc
+    wb.save()
