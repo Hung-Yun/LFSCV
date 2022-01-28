@@ -7,18 +7,10 @@ import os
 import numpy as np
 import pandas as pd
 
-box_path    = '/Users/hungyunlu/Library/CloudStorage/Box-Box'
-note_path   = os.path.join(box_path,'Hung-Yun Lu Research File/Projects/_LabNote')
-script_path = os.path.join(box_path,'Hung-Yun Lu Research File/Projects/FSCV/Script')
-data_path   = os.path.join(script_path,'Data/EN_data')
-fscv_path   = os.path.join(script_path,'Data/FSCV_data')
-model_path  = os.path.join(script_path,'Data/EN_model')
-eval_path   = os.path.join(script_path,'Data/EN_model/Model_evaluation')
-
-if os.getcwd() != script_path:
-    os.chdir(script_path)
-    print('================================')
-    print(f'Dirpath change to: {script_path}')
+data_path  = 'Data/EN_data'
+fscv_path  = 'Data/FSCV_data'
+model_path = 'Data/EN_model'
+eval_path  = 'Data/Model_evaluation'
 
 def ask_page():
     _ = input('Assign page (High DA, Low DA, pH, 5-HT, or NE): ')
@@ -30,7 +22,7 @@ def ask_page():
 
 def load_calibration_log():
     page = ask_page()
-    calibration = pd.read_excel(os.path.join(note_path,'_Calibration_log.xlsx'),page)
+    calibration = pd.read_excel('Log/calibration_log.xlsx',page)
     calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
     return calibration
 
