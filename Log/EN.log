@@ -1,0 +1,54 @@
+[2022-01-28 12:22:09] [    INFO] --- -- Now running Elastic_net.py --
+[2022-01-28 12:22:09] [    INFO] --- Start preparing x and y for regression.
+[2022-01-28 12:22:24] [    INFO] --- Distribution not saved as Dist-220128.png.
+[2022-01-28 12:22:38] [    INFO] --- Concentration profile:
+[2022-01-28 12:22:38] [    INFO] --- Centered conc: 1000.
+[2022-01-28 12:22:38] [    INFO] --- Variance: 35.
+[2022-01-28 12:22:38] [    INFO] --- Sample size: 6000.
+[2022-01-28 12:22:38] [    INFO] --- Model name: Model-1000-35-6000-220128
+[2022-01-28 12:22:38] [    INFO] --- Start resampling.
+[2022-01-28 12:24:11] [    INFO] --- Finish model fitting - alpha: 18330.815264756908; l1_ratio: 0.1000000000000002
+[2022-01-28 12:24:11] [    INFO] --- Model saved as Model-1000-35-6000-220128.sav.
+[2022-01-28 12:24:11] [    INFO] --- Train/test data saved.
+[2022-01-28 12:24:11] [    INFO] --- Model info saved in EN.pkl.
+[2022-01-31 14:03:00] [    INFO] --- -- Now running Elastic_net.py --
+[2022-01-31 14:03:00] [    INFO] --- Start preparing x and y for regression.
+[2022-01-31 14:03:15] [    INFO] --- Distribution not saved as Dist-220131.png.
+[2022-01-31 14:03:29] [    INFO] --- Concentration profile:
+[2022-01-31 14:03:29] [    INFO] --- Centered conc: 1350.
+[2022-01-31 14:03:29] [    INFO] --- Variance: 30.
+[2022-01-31 14:03:29] [    INFO] --- Sample size: 7000.
+[2022-01-31 14:03:29] [    INFO] --- Model name: Model-1350-30-7000-220131
+[2022-01-31 14:03:29] [    INFO] --- Start resampling.
+[2022-01-31 14:04:41] [    INFO] --- Finish model fitting - alpha: 32496.90; l1_ratio: 0.10
+[2022-01-31 14:04:41] [    INFO] --- Model saved as Model-1350-30-7000-220131.sav.
+[2022-01-31 14:04:41] [    INFO] --- Train/test data saved.
+[2022-01-31 14:04:41] [    INFO] --- Model info saved in EN.pkl.
+[2022-01-31 14:05:45] [    INFO] --- -- Now running Elastic_net.py --
+[2022-01-31 14:05:45] [    INFO] --- Start preparing x and y for regression.
+[2022-01-31 14:05:56] [    INFO] --- Distribution not saved as Dist-220131.png.
+[2022-01-31 14:06:05] [    INFO] --- Concentration profile:
+[2022-01-31 14:06:05] [    INFO] --- Centered conc: 1000.
+[2022-01-31 14:06:05] [    INFO] --- Variance: 40.
+[2022-01-31 14:06:05] [    INFO] --- Sample size: 8000.
+[2022-01-31 14:06:05] [    INFO] --- Model name: Model-1000-40-8000-220131
+[2022-01-31 14:06:05] [    INFO] --- Start resampling.
+[2022-01-31 14:06:09] [    INFO] --- Start fitting model
+[2022-01-31 14:07:25] [    INFO] --- Finish model fitting - alpha: 27501.70; l1_ratio: 0.10
+[2022-01-31 14:07:25] [    INFO] --- Model saved as Model-1000-40-8000-220131.sav.
+[2022-01-31 14:07:25] [    INFO] --- Train/test data saved.
+[2022-01-31 14:07:25] [    INFO] --- Model info saved in EN.pkl.
+[2022-01-31 14:21:16] [    INFO] --- -- Now running Elastic_net.py --
+[2022-01-31 14:21:16] [    INFO] --- Start preparing x and y for regression.
+[2022-01-31 14:21:31] [    INFO] --- Distribution saved as Dist-220131.png.
+[2022-01-31 14:22:14] [    INFO] --- Concentration profile:
+[2022-01-31 14:22:14] [    INFO] --- Centered conc: 70.
+[2022-01-31 14:22:14] [    INFO] --- Variance: 5.
+[2022-01-31 14:22:14] [    INFO] --- Sample size: 8000.
+[2022-01-31 14:22:14] [    INFO] --- Model name: Model-70-5-8000-220131
+[2022-01-31 14:22:14] [    INFO] --- Start resampling.
+[2022-01-31 14:22:38] [    INFO] --- Start fitting model
+[2022-01-31 14:23:55] [    INFO] --- Finish model fitting - alpha: 3828.62; l1_ratio: 0.10
+[2022-01-31 14:23:55] [    INFO] --- Model saved as Model-70-5-8000-220131.sav.
+[2022-01-31 14:23:56] [    INFO] --- Train/test data saved.
+[2022-01-31 14:23:56] [    INFO] --- Model info saved in EN.pkl.
