@@ -52,3 +52,17 @@
 [2022-01-31 14:23:55] [    INFO] --- Model saved as Model-70-5-8000-220131.sav.
 [2022-01-31 14:23:56] [    INFO] --- Train/test data saved.
 [2022-01-31 14:23:56] [    INFO] --- Model info saved in EN.pkl.
+[2022-01-31 14:32:29] [    INFO] --- -- Now running Elastic_net.py --
+[2022-01-31 14:32:29] [    INFO] --- Start preparing x and y for regression.
+[2022-01-31 14:32:36] [    INFO] --- Distribution not saved as Dist-220131.png.
+[2022-01-31 14:32:44] [    INFO] --- Concentration profile:
+[2022-01-31 14:32:44] [    INFO] --- Centered conc: 50.
+[2022-01-31 14:32:44] [    INFO] --- Variance: 5.
+[2022-01-31 14:32:44] [    INFO] --- Sample size: 8000.
+[2022-01-31 14:32:44] [    INFO] --- Model name: Model-50-5-8000-220131
+[2022-01-31 14:32:44] [    INFO] --- Start resampling.
+[2022-01-31 14:32:53] [    INFO] --- Start fitting model
+[2022-01-31 14:33:25] [    INFO] --- Finish model fitting - alpha: 2654.90; l1_ratio: 1.00
+[2022-01-31 14:33:25] [    INFO] --- Model saved as Model-50-5-8000-220131.sav.
+[2022-01-31 14:33:26] [    INFO] --- Train/test data saved.
+[2022-01-31 14:33:26] [    INFO] --- Model info saved in EN.pkl.
