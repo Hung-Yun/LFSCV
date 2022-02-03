@@ -68,7 +68,7 @@ def prepare(var):
         if check_status(file):
             _ = np.load(file)
             result = np.concatenate((result,_))
-            used_sessions.append([f'{electrode}_{date}'])
+            used_sessions.append(f'{electrode}_{date}')
     if var == 'x':
         result = np.diff(result) * 100000
     return result, used_sessions

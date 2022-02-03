@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-## Remove unnecessary files
+## Removing unwanted model
 
 import pandas as pd
 import os
 import utils
 import numpy as np
+import glob
+from View_models import view, get_model_name
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,17 +22,16 @@ logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 logger.info(f'-- Now running {os.path.basename(__file__)} --')
 
-model_path = utils.model_path
+df = pd.read_pickle('Log/EN.pkl')
+logger.warning('Removing unwanted model and associated files from EN_model folder.')
+view(df)
+model_name = get_model_name(df, int(input(' > The index of the model: ')) )
+logger.warning(f'Removing {model_name}.')
 
-while True:
-    logger.warning('Input model info.')
-    mu    = int(input(' > The centered concentration: '))
-    sigma = int(input(' > The variance of the distribution: '))
-    size  = int(input(' > The amount of samples in total: '))
-    base  = int(input(' > Round up base: '))
-    date  = int(input(' > The date when the model was created: '))
-    model_base = f'Model-{mu}-{sigma}-{size}-{date}'
-    if os.path.exists(os.path.join(model_path, model_base+'.sav')):
-        break
-    else:
-        logger.warning('File does not exist. Try again.')
+if int(input('Sure want to remove (0/1)? ')):
+    df = df[df.index != model_name]
+    df.to_pickle('Log/EN.pkl')
+    print(df)
+    files = glob.glob(os.path.join(utils.model_path,f'{model_name}*'))
+    for file in files:
+        os.remove(file)

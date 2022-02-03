@@ -128,6 +128,6 @@ np.save(os.path.join(model_path,f'{model_name}-ytrain.npy'), y_train)
 logger.info('Train/test data saved.')
 
 df = pd.read_pickle('Log/EN.pkl')
-df.loc[f'{model_name}'] = [mu, sigma, size, today, list(zip(a,b)), sessions]
+df.loc[f'{model_name}'] = [mu, sigma, size, today, np.array([a,b]), sessions]
 df.to_pickle('Log/EN.pkl')
 logger.info('Model info saved in EN.pkl.')

@@ -473,3 +473,33 @@
 [2022-01-31 14:32:34] [ WARNING] --- Not exist: E43_20211129_CONC.npy
 [2022-01-31 14:32:34] [    INFO] --- Session 9: 20211203 - E46.
 [2022-01-31 14:32:34] [    INFO] --- Session 10: 20211203 - E47.
+[2022-02-01 08:11:50] [    INFO] --- -- Now running Random_concentration.py --
+[2022-02-01 08:11:54] [    INFO] --- Assigned page: High DA
+[2022-02-01 08:11:54] [    INFO] --- Concentrations: [  50  100  200  300  400  450  650  700  800  900 1000 1050 1100 1200
+ 1300].
+[2022-02-01 08:11:56] [    INFO] --- Write in calibration_log.xlsx.
+[2022-02-01 08:12:31] [    INFO] --- Electrode: E46.
+[2022-02-02 07:30:59] [    INFO] --- -- Now running Remove.py --
+[2022-02-02 07:31:48] [    INFO] --- -- Now running Remove.py --
+[2022-02-02 07:31:53] [    INFO] --- Try retrieving Model-1350-50-7000-220131.
+[2022-02-02 07:31:53] [ WARNING] --- File does not exist. Try again.
+[2022-02-02 07:32:08] [    INFO] --- Try retrieving Model-1350-30-7000-220131.
+[2022-02-02 07:48:13] [    INFO] --- Try retrieving Model-1000-35-6000-220128.
+[2022-02-03 15:21:07] [    INFO] --- -- Now running Remove.py --
+[2022-02-03 15:21:07] [ WARNING] --- Removing unwanted model and associated files from EN_model folder.
+[2022-02-03 15:21:20] [    INFO] --- -- Now running Remove.py --
+[2022-02-03 15:21:20] [ WARNING] --- Removing unwanted model and associated files from EN_model folder.
+[2022-02-03 15:22:50] [    INFO] --- -- Now running Remove.py --
+[2022-02-03 15:22:50] [ WARNING] --- Removing unwanted model and associated files from EN_model folder.
+[2022-02-03 15:26:08] [    INFO] --- -- Now running Remove.py --
+[2022-02-03 15:26:08] [ WARNING] --- Removing unwanted model and associated files from EN_model folder.
+[2022-02-03 15:26:10] [ WARNING] --- Removing Model-1350-30-7000-220131.
+[2022-02-03 15:26:45] [    INFO] --- -- Now running Remove.py --
+[2022-02-03 15:26:45] [ WARNING] --- Removing unwanted model and associated files from EN_model folder.
+[2022-02-03 15:26:46] [ WARNING] --- Removing Model-1350-30-7000-220131.
+[2022-02-03 15:27:01] [    INFO] --- -- Now running Remove.py --
+[2022-02-03 15:27:01] [ WARNING] --- Removing unwanted model and associated files from EN_model folder.
+[2022-02-03 15:27:03] [ WARNING] --- Removing Model-1350-30-7000-220131.
+[2022-02-03 15:28:55] [    INFO] --- -- Now running Remove.py --
+[2022-02-03 15:28:55] [ WARNING] --- Removing unwanted model and associated files from EN_model folder.
+[2022-02-03 15:29:00] [ WARNING] --- Removing Model-1000-35-6000-220128.
