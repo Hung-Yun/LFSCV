@@ -35,3 +35,6 @@ if int(input('Sure want to remove (0/1)? ')):
     files = glob.glob(os.path.join(utils.model_path,f'{model_name}*'))
     for file in files:
         os.remove(file)
+    files = glob.glob(os.path.join(utils.eval_path,f'*{model_name}*'))
+    for file in files:
+        os.remove(file)

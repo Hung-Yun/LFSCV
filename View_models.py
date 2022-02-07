@@ -43,7 +43,6 @@ def main():
         plt.text(i, v+5, str(int(v)), ha='center',fontdict=dict(fontsize=8))
 
     for i in range(len(sessions)):
-        # plt.text(4,3000-i*150, sessions[i],fontdict=dict(fontsize=8))
         plt.gcf().text(0.02,0.9-i*0.04,sessions[i],fontsize=7)
     plt.savefig(os.path.join(utils.eval_path, f'SampleDist-{model_name}.png'))
 
