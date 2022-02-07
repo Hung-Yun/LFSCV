@@ -8,78 +8,81 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.cluster import AgglomerativeClustering as AHC
-from scipy.cluster import hierarchy
+from scipy.cluster.hierarchy import linkage, dendrogram
 import utils
+import matplotlib.pyplot as plt
 
-## Folder info
-data_path = utils.data_path
+def avg(x):
+    sample, feature = x.shape
+    x_mean = np.empty((0,feature))
+    for i in range(int(sample/400)):
+        xx = np.mean(x[i*400:(i+1)*400],axis=0)[np.newaxis,:]
+        x_mean = np.concatenate((x_mean,xx))
+    return x_mean
 
-## Load calibration log
-calibration = utils.load_calibration_log()
 
-## Prepare data
-# Cannot use utils.prepare() because we are averaging the PBS responses
-xs = np.empty((0,1000))
-x_diffs = np.empty((0,999))
-for session in range(len(calibration)):
-    date      = calibration.iloc[session].loc['Date']
-    electrode = calibration.iloc[session].loc['Electrode']
-    file = os.path.join(data_path,f'{electrode}_{date}_FSCV.npy')
-    if utils.check_status(file):
-        x = np.load(file)
-        xx = np.mean(x[:400,:],0)[np.newaxis,:] # The average PBS response
-        xs = np.concatenate((xs, xx)) # xs for visualization only
-        x_diff = np.diff(xx) * 100000
-        x_diffs = np.concatenate((x_diffs,x_diff))
-
-## Fit the clustering model
-model = AHC(n_clusters=None, distance_threshold=0, linkage='single')
-model = model.fit(x_diffs)
-
-## Compute the linkage
-counts = np.zeros(model.children_.shape[0])
-n_samples = len(model.labels_)
-for i, merge in enumerate(model.children_):
-    current_count = 0
-    for child_idx in merge:
-        if child_idx < n_samples:
-            current_count += 1  # leaf node
+def optimal_cluster(data,target_session,n_sessions=5):
+    n_cluster = data.shape[0]
+    while n_cluster > 0:
+        y = AHC(n_clusters=n_cluster, linkage='ward').fit_predict(data)
+        if len(np.where(y==y[target_session])[0]) < n_sessions:
+            n_cluster -= 1
         else:
-            current_count += counts[child_idx - n_samples]
-    counts[i] = current_count
-link = np.column_stack([model.children_, model.distances_, counts])
+            index = np.where(y==y[target_session])[0]
+            break
+    return index
 
-## Visualization
-hierarchy.set_link_color_palette(['red','blue','green'])
-R = hierarchy.dendrogram(link,
-                         color_threshold = 0.5*max(link[:,2]),
-                         above_threshold_color = 'k')
-plt.xlabel('Session number')
-plt.ylabel('Distance')
-plt.title('Hierarchical clustering')
-plt.show()
 
-## Visualization
-def find_color(R,color):
-    leaves  = np.array(R['leaves'])
-    indices = np.array([i for i,j in enumerate(R['leaves_color_list']) if j==color])
-    return leaves[indices]
-red  = find_color(R,'red')
-blue = find_color(R,'blue')
-green = find_color(R,'green')
+def link_color(data,index):
+    '''
+    Sessions that group with our target will return red, otherwise blue.
+    '''
+    Z = linkage(data,'ward')
+    leaf_colors = {i:('r' if i in index else 'b') for i in range(len(Z)+1)}
+    link_colors = {}
+    for i, ind_12 in enumerate(Z[:,:2].astype(int)):
+        c1, c2 = (link_colors[ind] if ind > len(Z) else leaf_colors[ind] for ind in ind_12)
+        link_colors[i+1+len(Z)] = c1 if c1 == c2 else 'b'
 
-plt.xlabel('Data point')
-plt.ylabel('Amplitude (nA)')
-plt.title('Color-coded FSCV response')
-plt.yticks(rotation=90)
-for i in range(len(xs)):
-    if i in red:
-        plt.plot(xs[i,:],c='red')
-    elif i in blue:
-        plt.plot(xs[i,:],c='blue')
-    elif i in green:
-        plt.plot(xs[i,:],c='green')
-    else:
-        plt.plot(xs[i,:],c='black')
-plt.show()
-hierarchy.set_link_color_palette(None)
+    return link_colors
+
+
+def plot_cluster(data, sessions, link_colors):
+    labels = range(len(data))
+    plt.figure(figsize=(6,5))
+    d = dendrogram( linkage(data,'ward'), link_color_func=lambda k: link_colors[k])
+    plt.ylabel('Distance')
+    plt.xlabel('Session ID')
+    plt.title('Clustering of various sessions')
+    plt.gcf().text(0.02,0.84,f'Session ID' ,fontsize=7.5, weight='bold')
+    for i in range(len(sessions)):
+        plt.gcf().text(0.02,0.8-i*0.04,f'{i}: {sessions[i]}',fontsize=7.5)
+    plt.subplots_adjust(left=0.3)
+    plt.savefig(os.path.join(utils.eval_path,'Cluster.png'))
+
+
+def main():
+
+    # TODO: How to include new session of interest into x_diff and x_raw?
+
+    # x_raw,  sessions = utils.prepare('x',diff=False) # For visualization purpose
+    # x_diff, sessions = utils.prepare('x',diff=True)
+    y,      sessions = utils.prepare('y')
+    x_raw = np.load('x_raw.npy') # Temporary
+    x_diff = np.load('x.npy') # Temporary
+
+    x_diff = x_diff[y==0]
+    x_raw  = x_raw[y==0]
+    x_diff = avg(x_diff)
+    x_raw  = avg(x_raw)
+
+    # TODO: change to input
+    target_session = 12
+    n_session = 6
+
+    ind  = optimal_cluster(x_diff,target_session,n_session)
+    link = link_color(x_diff,ind)
+    plot_cluster(x_diff, sessions, link)
+
+if __name__ == '__main__':
+    main()

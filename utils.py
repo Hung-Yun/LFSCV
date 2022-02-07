@@ -27,14 +27,13 @@ eval_path  = 'Data/Model_evaluation'
 def ask_page():
     _ = input('Assign page (High DA, Low DA, pH, 5-HT, or NE): ')
     if _ in ['High DA', 'Low DA', 'pH', '5-HT', 'NE']:
-        logger.info(f'Assigned page: {_}')
+        print(f'Assigned page: {_}')
         return _
     else:
         return ask_page()
 
 def load_calibration_log():
     page = ask_page()
-    logger.info('Load in calibration_log.xlsx.')
     calibration = pd.read_excel('Log/calibration_log.xlsx',page)
     calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
     return calibration
@@ -46,8 +45,7 @@ def check_status(file):
         logger.warning(f'Not exist: {file.split("/")[-1]}')
         return False
 
-def prepare(var):
-    logger.info(f'Now preparing {var}')
+def prepare(var,diff=True):
     calibration = load_calibration_log()
     if var == 'x':
         result = np.empty((0,1000))
@@ -59,16 +57,18 @@ def prepare(var):
         raise ValueError('Wrong input!')
     used_sessions = []
     # Current default: use all sessions.
-    # Future: decide sessions after clustering.
+    # TODO: decide sessions after clustering.
     for session in range(len(calibration)):
         date      = calibration.iloc[session].loc['Date']
         electrode = calibration.iloc[session].loc['Electrode']
-        logger.info(f'Session {session}: {date} - {electrode}.')
         file = os.path.join(data_path,f'{electrode}_{date}_{suffix}.npy')
         if check_status(file):
             _ = np.load(file)
             result = np.concatenate((result,_))
             used_sessions.append(f'{electrode}_{date}')
-    if var == 'x':
-        result = np.diff(result) * 100000
+    if diff == True and var == 'x':
+        result = np.diff(result) * 100000 # 100 kHz
+    print('Used sessions:')
+    for i in used_sessions:
+        print(i)
     return result, used_sessions
