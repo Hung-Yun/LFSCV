@@ -29,7 +29,10 @@ fscv_path = utils.fscv_path
 eval_path = utils.eval_path
 
 ## Load calibration log
-calibration = utils.load_calibration_log()
+page = utils.ask_page()
+calibration = pd.read_excel('Log/calibration_log.xlsx',page)
+calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
+
 # Check status of processing data
 for session in range(len(calibration)):
     date      = calibration.iloc[session].loc['Date']

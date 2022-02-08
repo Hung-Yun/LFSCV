@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pandas as pd
 import logging
+import Clustering
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -32,12 +33,6 @@ def ask_page():
     else:
         return ask_page()
 
-def load_calibration_log():
-    page = ask_page()
-    calibration = pd.read_excel('Log/calibration_log.xlsx',page)
-    calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
-    return calibration
-
 def check_status(file):
     if os.path.exists(file):
         return True
@@ -45,8 +40,13 @@ def check_status(file):
         logger.warning(f'Not exist: {file.split("/")[-1]}')
         return False
 
-def prepare(var,diff=True):
-    calibration = load_calibration_log()
+def prepare(var,page,sessions=[],diff=True,view_session=True):
+
+    calibration = pd.read_excel('Log/calibration_log.xlsx',page)
+    calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
+    if sessions == []:
+        sessions = calibration.index.values
+
     if var == 'x':
         result = np.empty((0,1000))
         suffix = 'FSCV'
@@ -55,20 +55,20 @@ def prepare(var,diff=True):
         suffix = 'CONC'
     else:
         raise ValueError('Wrong input!')
-    used_sessions = []
-    # Current default: use all sessions.
-    # TODO: decide sessions after clustering.
-    for session in range(len(calibration)):
-        date      = calibration.iloc[session].loc['Date']
-        electrode = calibration.iloc[session].loc['Electrode']
+
+    session_names = []
+    for i in range(len(sessions)):
+        date      = calibration.iloc[sessions[i]].loc['Date']
+        electrode = calibration.iloc[sessions[i]].loc['Electrode']
         file = os.path.join(data_path,f'{electrode}_{date}_{suffix}.npy')
         if check_status(file):
             _ = np.load(file)
             result = np.concatenate((result,_))
-            used_sessions.append(f'{electrode}_{date}')
+            session_names.append(f'{electrode}_{date}')
     if diff == True and var == 'x':
         result = np.diff(result) * 100000 # 100 kHz
-    print('Used sessions:')
-    for i in used_sessions:
-        print(i)
-    return result, used_sessions
+    if view_session:
+        print('Used sessions:')
+        for id,name in zip(sessions,session_names):
+            print(f'Session {id}: {name}')
+    return result, session_names

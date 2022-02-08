@@ -13,6 +13,7 @@ from sklearn.utils import shuffle
 import pickle
 import utils
 import xlwings as xw
+import Clustering
 
 import datetime
 today = datetime.date.today().strftime('%y%m%d')
@@ -37,9 +38,10 @@ model_path = utils.model_path
 eval_path  = utils.eval_path
 
 ## Prepare x and y for regression
-logger.info('Start preparing x and y for regression.')
-x, sessions = utils.prepare('x')
-y, sessions = utils.prepare('y')
+index = Clustering.cluster()
+page  = utils.ask_page()
+x, sessions = utils.prepare('x',page,index,view_session=True)
+y, sessions = utils.prepare('y',page,index,view_session=False)
 
 ## Visualize distribution
 if int(input('Visualize distribution or not (0/1)? ')):

@@ -21,7 +21,20 @@ def avg(x):
     return x_mean
 
 
-def optimal_cluster(data,target_session,n_sessions=5):
+def optimal_cluster(data):
+    '''
+    Return the indeces for the sessions in the cluster.
+
+    INPUT
+        1. data: Array of (n,999), where n is the number of sessions for clustering.
+        2. target_session: Positive integer, the session ID of interest.
+        3. n_sessions: Positive integer, the amount of sessions in the cluster.
+
+    OUPUT
+        1. index: Array of (m,), where m is the amount of sessions. m >= n_sessions.
+    '''
+    target_session = int(input(' > The session ID of interest: '))
+    n_sessions = int(input(' > At least how many sessions in the cluster: '))
     n_cluster = data.shape[0]
     while n_cluster > 0:
         y = AHC(n_clusters=n_cluster, linkage='ward').fit_predict(data)
@@ -47,42 +60,43 @@ def link_color(data,index):
     return link_colors
 
 
-def plot_cluster(data, sessions, link_colors):
-    labels = range(len(data))
-    plt.figure(figsize=(6,5))
-    d = dendrogram( linkage(data,'ward'), link_color_func=lambda k: link_colors[k])
+def cluster():
+
+    print(' > Now running cluster() function in Clustering.py')
+    page = utils.ask_page()
+    x_raw,  sessions = utils.prepare('x',page,diff=False) # For visualization purpose
+    x_diff, sessions = utils.prepare('x',page,diff=True,view_session=False)
+    y,      sessions = utils.prepare('y',page,view_session=False)
+
+    x_diff = avg(x_diff[y==0])
+    x_raw  = avg(x_raw[y==0])
+
+    ind  = optimal_cluster(x_diff)
+    link = link_color(x_diff,ind)
+
+    labels = range(len(x_diff))
+    plt.figure(figsize=(6,8))
+    plt.subplot(211)
+    dendrogram( linkage(x_diff,'ward'), link_color_func=lambda k:link[k])
     plt.ylabel('Distance')
     plt.xlabel('Session ID')
     plt.title('Clustering of various sessions')
-    plt.gcf().text(0.02,0.84,f'Session ID' ,fontsize=7.5, weight='bold')
-    for i in range(len(sessions)):
-        plt.gcf().text(0.02,0.8-i*0.04,f'{i}: {sessions[i]}',fontsize=7.5)
-    plt.subplots_adjust(left=0.3)
-    plt.savefig(os.path.join(utils.eval_path,'Cluster.png'))
+    plt.subplot(212)
+    plt.xlabel('Time points (sample)')
+    plt.ylabel('Amplitude (nA)')
+    plt.title('Representative CV response in each session')
+    plt.gcf().text(0.02,0.85,f'Session ID' ,fontsize=8, weight='bold')
+    for i in labels:
+        plt.gcf().text(0.02,0.83-i*0.02,f'{i}: {sessions[i]}',fontsize=8)
+        if i in ind:
+            plt.plot(x_raw[i],'r')
+        else:
+            plt.plot(x_raw[i],'b')
+    plt.subplots_adjust(left=0.32,hspace=0.3)
+    # plt.savefig(os.path.join(utils.eval_path,'Cluster.png'))
+    plt.show()
 
-
-def main():
-
-    # TODO: How to include new session of interest into x_diff and x_raw?
-
-    # x_raw,  sessions = utils.prepare('x',diff=False) # For visualization purpose
-    # x_diff, sessions = utils.prepare('x',diff=True)
-    y,      sessions = utils.prepare('y')
-    x_raw = np.load('x_raw.npy') # Temporary
-    x_diff = np.load('x.npy') # Temporary
-
-    x_diff = x_diff[y==0]
-    x_raw  = x_raw[y==0]
-    x_diff = avg(x_diff)
-    x_raw  = avg(x_raw)
-
-    # TODO: change to input
-    target_session = 12
-    n_session = 6
-
-    ind  = optimal_cluster(x_diff,target_session,n_session)
-    link = link_color(x_diff,ind)
-    plot_cluster(x_diff, sessions, link)
+    return ind
 
 if __name__ == '__main__':
-    main()
+    index = cluster()

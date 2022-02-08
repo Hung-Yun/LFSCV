@@ -66,3 +66,10 @@
 [2022-01-31 14:33:25] [    INFO] --- Model saved as Model-50-5-8000-220131.sav.
 [2022-01-31 14:33:26] [    INFO] --- Train/test data saved.
 [2022-01-31 14:33:26] [    INFO] --- Model info saved in EN.pkl.
+[2022-02-08 16:17:21] [    INFO] --- -- Now running Elastic_net.py --
+[2022-02-08 16:22:18] [    INFO] --- -- Now running Elastic_net.py --
+[2022-02-08 16:29:41] [    INFO] --- -- Now running Elastic_net.py --
+[2022-02-08 16:30:05] [    INFO] --- Distribution saved as Dist-220208.png.
+[2022-02-08 16:30:50] [    INFO] --- -- Now running Elastic_net.py --
+[2022-02-08 16:31:56] [    INFO] --- -- Now running Elastic_net.py --
+[2022-02-08 16:32:30] [    INFO] --- Distribution saved as Dist-220208.png.
