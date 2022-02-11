@@ -2,6 +2,15 @@
 Performs the elastic-net regression model to infer
 conentrations of neurotransmitters measured by the
 fast-scan cyclic voltammetry.
+
+
+TODO:
+
+Docstring
+plot_distribution()
+save files consideration
+README
+
 '''
 
 import os
@@ -9,6 +18,8 @@ import numpy as np
 import pandas as pd
 import pickle
 import datetime
+import glob
+import xlwings as xw
 import matplotlib.pyplot as plt
 from sklearn.cluster import AgglomerativeClustering as AHC
 from sklearn.linear_model import ElasticNetCV
@@ -23,6 +34,30 @@ model_path = 'Data/EN_model'
 eval_path  = 'Data/Model_evaluation'
 cal_path   = 'Log/calibration_log.xlsx'
 pkl_path   = 'Log/EN.pkl'
+
+def rand_conc(file,write_in=True):
+
+    sheets = pd.read_excel(cal_path,None).keys()
+    today = datetime.date.today().strftime('%Y-%m-%d')
+
+    if file not in sheets:
+        raise ValueError('Wrong input. No such page.')
+    # TODO: Add pH, 5-HT, NE
+    conc_range = {
+                'High DA': np.arange(1500,-1,-50),
+                'Low DA':  np.arange(150,0,-5)
+                  }
+    seq  = np.random.permutation(30)[:15]
+    conc = np.sort(conc_range[file][seq])
+    if write_in:
+        wb = xw.Book(cal_path)
+        sheet = wb.sheets[file]
+        row = str(sheet.range('A' + str(sheet.cells.last_cell.row)).end('up').row + 1)
+        sheet.range('A'+row).value = today
+        sheet.range('B'+row).value = input('Which electrode? ')
+        sheet.range('C'+row).value = conc
+        wb.save()
+    return conc
 
 def check_status(file):
     if os.path.exists(file):
@@ -59,20 +94,22 @@ class EN:
         '''
         Prepare the x and y parameters for clustering or elastic net modeling.
         '''
+        if var not in ['x','y']:
+            raise ValueError('Input should be x or y.')
+
         calibration = pd.read_excel(cal_path, self.page)
         calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
 
+        # If it's unassigned, use all sessions
         if len(self.session_ID) == 0:
             self.session_ID = calibration.index.values
 
         if var == 'x':
             result = np.empty((0,1000))
             suffix = 'FSCV'
-        elif var == 'y':
+        else:
             result = np.empty((0,))
             suffix = 'CONC'
-        else:
-            raise ValueError('Wrong input!')
 
         for i in range(len(self.session_ID)):
             date      = calibration.iloc[self.session_ID[i]].loc['Date']
@@ -91,7 +128,7 @@ class EN:
                 self.x = result
             else:
                 return result
-        elif var == 'y':
+        else:
             self.y = result
 
     def _cluster(self):
@@ -219,25 +256,25 @@ class EN:
         self.x_resample = xx
         self.y_resample = yy
 
-    # def plot_distribution(self,resampled=False):
-    #     # refer to View_models main()
-    #     if self.y_resample is None:
-    #         print('Data should be resampled before plotting.')
-    #         return None
-    #     else:
-    #         if resampled:
-    #             data = self.y_resample
-    #         else:
-    #             data = self.y
-    #             name = f'Dist-{self.target}-{self.today}.png'
-    #             size = (10,8)
-    #     a,b = np.unique(data,return_counts=True)
-    #     plt.figure(figsize=size)
-    #     plt.bar(a.astype(int).astype(str),b)
-    #     plt.ylabel('Count')
-    #     plt.xlabel('Concentration (nM)')
-    #     plt.xticks(rotation=90)
-    #     plt.savefig(os.path.join(eval_path,name))
+    def plot_distribution(self,resampled=False):
+        # refer to View_models main()
+        if self.y_resample is None:
+            print('Data should be resampled before plotting.')
+            return None
+        else:
+            if resampled:
+                data = self.y_resample
+            else:
+                data = self.y
+                name = f'Dist-{self.target}-{self.today}.png'
+                size = (10,8)
+        a,b = np.unique(data,return_counts=True)
+        plt.figure(figsize=size)
+        plt.bar(a.astype(int).astype(str),b)
+        plt.ylabel('Count')
+        plt.xlabel('Concentration (nM)')
+        plt.xticks(rotation=90)
+        plt.savefig(os.path.join(eval_path,name))
 
     def regression(self):
         if self.y_resample is None:
@@ -257,9 +294,9 @@ class EN:
         np.save(os.path.join(model_path,f'{self.model_name}-xtrain.npy'), x_train)
         np.save(os.path.join(model_path,f'{self.model_name}-ytrain.npy'), y_train)
 
-        if not os.path.exists(utils.pkl_path):
+        if not check_status(pkl_path):
             df = pd.DataFrame(columns=['Target','Conc','Sigma','Size','Date','Dist','Sessions'])
-        df = pd.read_pickle(utils.pkl_path)
+        df = pd.read_pickle(pkl_path)
         df.loc[f'{self.model_name}'] = [self.target,
                                         self.conc,
                                         self.sigma,
@@ -267,4 +304,4 @@ class EN:
                                         self.today,
                                         np.array([a,b]),
                                         self.session_names]
-        df.to_pickle(utils.pkl_path)
+        df.to_pickle(pkl_path)
