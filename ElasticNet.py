@@ -2,15 +2,6 @@
 Performs the elastic-net regression model to infer
 conentrations of neurotransmitters measured by the
 fast-scan cyclic voltammetry.
-
-
-TODO:
-
-Docstring
-plot_distribution()
-save files consideration
-README
-
 '''
 
 import os
@@ -36,7 +27,10 @@ cal_path   = 'Log/calibration_log.xlsx'
 pkl_path   = 'Log/EN.pkl'
 
 def rand_conc(file,write_in=True):
-
+    '''
+    Create 15 random concentrations for Octaflow.
+    Writing into the excel file 'calibration_log.xlsx'.
+    '''
     sheets = pd.read_excel(cal_path,None).keys()
     today = datetime.date.today().strftime('%Y-%m-%d')
 
@@ -69,9 +63,23 @@ def check_status(file):
 class EN:
 
     def __init__(self,page):
-        self._page = page
-        self.session_ID = []
-        self.session_names = []
+        '''
+        INPUT
+            1. page: string. the page of interest ('High DA','Low DA'...)
+
+        INITIATE
+            1. self._page: the page of interest
+            2. self.session_ID: the chosen sessions' IDs for EN regression.
+               Starting with empty lists but will be list consisting of
+               several positive integers of interest after applying
+               self._cluster().
+            3. self.session_names: the session names for EN regression.
+               Same as self.session_ID. An empty list first.
+            4. self.x_resample: the resampled x that is ready for regression.
+            5. self.y_resample: the resampled y that is ready for regression.
+
+        '''
+        ㄒㄧ
         self._cluster()
         self.x_resample = None
         self.y_resample = None
@@ -93,6 +101,11 @@ class EN:
     def prepare(self,var,diff=True):
         '''
         Prepare the x and y parameters for clustering or elastic net modeling.
+
+        INPUT
+            1. var: string of x or y. The variable of interest to prepare for the data.
+            2. diff: boolean default True. Indicate whether the resampled x needs to differentiate.
+               Usually used for visualization in the self._cluster() function.
         '''
         if var not in ['x','y']:
             raise ValueError('Input should be x or y.')
@@ -132,6 +145,9 @@ class EN:
             self.y = result
 
     def _cluster(self):
+        '''
+        Perform clustering for electrode selection.
+        '''
 
         def avg(x):
             '''
@@ -192,6 +208,7 @@ class EN:
         for id,name in zip(self.session_ID,self.session_names):
             print(f'Session {id}: {name}')
 
+        # IMPORTANT: determining the session of interest.
         target_session = int(input(' > The session ID of interest: '))
         n_sessions = int(input(' > At least how many sessions in the cluster: '))
         self.session_ID = optimal_cluster(x_diff)
@@ -220,6 +237,16 @@ class EN:
         plt.savefig(os.path.join(eval_path,f'{self.target}-Cluster.png'))
 
     def resample(self,conc,sigma,size,base):
+        '''
+        Resample data for EN regression.
+        Detailed description in Kishida 2016 PNAS.
+
+        INPUT (All positive integers)
+            1. conc: the centered concentration.
+            2. sigma: the variance of the sampling.
+            3. size: the intended amount of data.
+            4. base: the round-up base, default 50 for high DA, 5-HT and NE, 5 for low DA.
+        '''
 
         self.conc  = conc
         self.sigma = sigma
@@ -257,6 +284,9 @@ class EN:
         self.y_resample = yy
 
     def plot_distribution(self,resampled=False):
+        '''
+        Plot the distribution of data, either before or after resampling.
+        '''
         # refer to View_models main()
         if self.y_resample is None:
             print('Data should be resampled before plotting.')
@@ -264,13 +294,19 @@ class EN:
         else:
             if resampled:
                 data = self.y_resample
+                name = f'{self.target}-Dist-resampled-{self.conc}-{self.sigma}-{self.size}-{self.today}.png'
             else:
                 data = self.y
-                name = f'Dist-{self.target}-{self.today}.png'
-                size = (10,8)
+                name = f'{self.target}-Dist-{self.today}.png'
         a,b = np.unique(data,return_counts=True)
-        plt.figure(figsize=size)
         plt.bar(a.astype(int).astype(str),b)
+        for i,v in enumerate(b):
+            plt.text(i, v+5, str(int(v)), ha='center', fontdict=dict(fontsize=8))
+        if resampled:
+            plt.subplots_adjust(left=0.3)
+            plt.gcf().text(0.02,0.9-i*0.04,'Used sessions',fontsize=7)
+            for i in range(len(self.session_names)):
+                plt.gcf().text(0.02,0.9-i*0.04,self.session_names[i],fontsize=7)
         plt.ylabel('Count')
         plt.xlabel('Concentration (nM)')
         plt.xticks(rotation=90)
