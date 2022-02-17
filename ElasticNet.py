@@ -26,152 +26,106 @@ eval_path  = 'Data/Model_evaluation'
 cal_path   = 'Log/calibration_log.xlsx'
 pkl_path   = 'Log/EN.pkl'
 
-def rand_conc(file,write_in=True):
-    '''
-    Create 15 random concentrations for Octaflow.
-    Writing into the excel file 'calibration_log.xlsx'.
-    '''
-    sheets = pd.read_excel(cal_path,None).keys()
-    today = datetime.date.today().strftime('%Y-%m-%d')
-
-    if file not in sheets:
-        raise ValueError('Wrong input. No such page.')
-    # TODO: Add pH, 5-HT, NE
-    conc_range = {
-                'High DA': np.arange(1500,-1,-50),
-                'Low DA':  np.arange(150,0,-5)
-                  }
-    seq  = np.random.permutation(30)[:15]
-    conc = np.sort(conc_range[file][seq])
-    if write_in:
-        wb = xw.Book(cal_path)
-        sheet = wb.sheets[file]
-        row = str(sheet.range('A' + str(sheet.cells.last_cell.row)).end('up').row + 1)
-        sheet.range('A'+row).value = today
-        sheet.range('B'+row).value = input('Which electrode? ')
-        sheet.range('C'+row).value = conc
-        wb.save()
-    return conc
+## Load calibration log
+calibration = pd.read_excel(cal_path)
+calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
+calibration['Session'] = calibration['Electrode']+'_'+calibration['Date']
+calibration['FSCV_data'] = calibration['Date']+'_'+calibration['Electrode']+'_Octaflow'
 
 def check_status(file):
     if os.path.exists(file):
         return True
     else:
-        print(f'File not found: {file.split("/")[-1]}')
+        print(f' > File not found: {file.split("/")[-1]}')
         return False
 
-class EN:
+class NT:
+    '''
+    Prepare data for NT (different neurotransmitters)
+    '''
 
-    def __init__(self,page):
+    def __init__(self,target):
         '''
-        INPUT
-            1. page: string. the page of interest ('High DA','Low DA'...)
-
         INITIATE
-            1. self._page: the page of interest
-            2. self.session_ID: the chosen sessions' IDs for EN regression.
-               Starting with empty lists but will be list consisting of
-               several positive integers of interest after applying
-               self._cluster().
-            3. self.session_names: the session names for EN regression.
-               Same as self.session_ID. An empty list first.
-            4. self.x_resample: the resampled x that is ready for regression.
-            5. self.y_resample: the resampled y that is ready for regression.
-
+            1. self._session:   dict, the sessions associated with that analyte
+            2. self.target:     str,  the target session name
+            3. self.analyte:    str,  the analyte of interest, should be DA or 5-HT
+            4. self._cluster(): fxn,  performs clustering to choose sessions
         '''
-        ㄒㄧ
+
+        self._session = calibration.Session.to_dict()
+        self.target   = target
+        self.analyte  = calibration[calibration.Session==self.target].Analyte.values[0]
+        self._session = list(calibration[calibration.Analyte==self.analyte].Session)
         self._cluster()
-        self.x_resample = None
-        self.y_resample = None
-        self.today = datetime.date.today().strftime('%y%m%d')
 
     @property
-    def page(self):
-        return self._page
+    def analyte(self):
+        return self._analyte
 
-    @page.setter
-    def page(self,page):
-        sheets = pd.read_excel(cal_path,None).keys()
-        if page in sheets:
-            self._page = page
+    @analyte.setter
+    def analyte(self,analyte):
+            self._analyte = analyte
+
+    @property
+    def session(self):
+        return self._session
+
+    @property
+    def target(self):
+        return self._target
+
+    @target.setter
+    def target(self,target):
+        if target in self.session.values():
+            self._target = target
         else:
-            raise ValueError('Wrong input. No such page.')
+            raise ValueError('Wrong input. No such session.')
 
-
-    def prepare(self,var,diff=True):
+    def prepare(self,var):
         '''
         Prepare the x and y parameters for clustering or elastic net modeling.
 
         INPUT
-            1. var: string of x or y. The variable of interest to prepare for the data.
+            1. var: string of x or y or BL (baseline). The variable of interest to prepare for the data.
             2. diff: boolean default True. Indicate whether the resampled x needs to differentiate.
                Usually used for visualization in the self._cluster() function.
         '''
-        if var not in ['x','y']:
-            raise ValueError('Input should be x or y.')
-
-        calibration = pd.read_excel(cal_path, self.page)
-        calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
-
-        # If it's unassigned, use all sessions
-        if len(self.session_ID) == 0:
-            self.session_ID = calibration.index.values
-
-        if var == 'x':
+        if var not in ['x','y','BL']:
+            raise ValueError('Input should be x, y, or BL (baseline).')
+        if var == 'x' or var == 'BL':
             result = np.empty((0,1000))
             suffix = 'FSCV'
         else:
             result = np.empty((0,))
             suffix = 'CONC'
 
-        for i in range(len(self.session_ID)):
-            date      = calibration.iloc[self.session_ID[i]].loc['Date']
-            electrode = calibration.iloc[self.session_ID[i]].loc['Electrode']
-            file = os.path.join(data_path,f'{electrode}_{date}_{suffix}.npy')
+        un_preprocess = []
+        for i in self.session:
+            file = os.path.join(data_path,f'{i}_{suffix}.npy')
             if check_status(file):
-                _ = np.load(file)
-                result = np.concatenate((result,_))
-                self.session_names.append(f'{electrode}_{date}')
-
-        if diff and var == 'x':
-            result = np.diff(result) * 100000 # 100 kHz
+                fscv = np.load(file)
+                if var != 'BL':
+                    result = np.concatenate((result,fscv))
+                else:
+                    result = np.concatenate((result,np.mean(fscv[:400],axis=0)[np.newaxis,:]))
+            else:
+                un_preprocess.append(i)
+        if len(un_preprocess):
+            [self.session.remove(i) for i in un_preprocess]
 
         if var == 'x':
-            if diff:
-                self.x = result
-            else:
-                return result
-        else:
+            result = np.diff(result) * 100000 # take finite difference, 100 kHz
+            self.x = result
+        elif var == 'y':
             self.y = result
+        else:
+            self.x_BL = result
 
     def _cluster(self):
         '''
         Perform clustering for electrode selection.
         '''
-
-        def avg(x):
-            '''
-            Average for every session (across 400 samples)
-            '''
-            sample, feature = x.shape
-            x_mean = np.empty((0,feature))
-            for i in range(int(sample/400)):
-                xx = np.mean(x[i*400:(i+1)*400],axis=0)[np.newaxis,:]
-                x_mean = np.concatenate((x_mean,xx))
-            return x_mean
-
-        def link_color(data,index):
-            '''
-            Sessions that group with our target will return red, otherwise blue.
-            '''
-            Z = linkage(data,'ward')
-            leaf_colors = {i:('r' if i in index else 'b') for i in range(len(Z)+1)}
-            link_colors = {}
-            for i, ind_12 in enumerate(Z[:,:2].astype(int)):
-                c1, c2 = (link_colors[ind] if ind > len(Z) else leaf_colors[ind] for ind in ind_12)
-                link_colors[i+1+len(Z)] = c1 if c1 == c2 else 'b'
-
-            return link_colors
 
         def optimal_cluster(data):
             '''
@@ -196,29 +150,37 @@ class EN:
                 else:
                     return np.where(y==y[target_session])[0]
 
+        def link_color(data,index):
+            '''
+            Sessions that group with our target will return red, otherwise blue.
+            '''
+            Z = linkage(data,'ward')
+            leaf_colors = {i:('r' if i in index else 'b') for i in range(len(Z)+1)}
+            link_colors = {}
+            for i, ind_12 in enumerate(Z[:,:2].astype(int)):
+                c1, c2 = (link_colors[ind] if ind > len(Z) else leaf_colors[ind] for ind in ind_12)
+                link_colors[i+1+len(Z)] = c1 if c1 == c2 else 'b'
+
+            return link_colors
+
+        # Prepare all data at once before use of the function resample()
         self.prepare('x')
         self.prepare('y')
-        x_raw = self.prepare('x',diff=False)
+        self.prepare('BL')
+        x_diff = np.diff(self.x_BL) * 100000 # take finite difference, 100 kHz
 
-        x_diff = avg(self.x[self.y==0])
-        x_raw  = avg(x_raw[self.y==0])
-
-        print('=============')
-        print('All sessions:')
-        for id,name in zip(self.session_ID,self.session_names):
-            print(f'Session {id}: {name}')
-
-        # IMPORTANT: determining the session of interest.
-        target_session = int(input(' > The session ID of interest: '))
+        target_session = self.session.index(self.target)
         n_sessions = int(input(' > At least how many sessions in the cluster: '))
-        self.session_ID = optimal_cluster(x_diff)
-        link = link_color(x_diff,self.session_ID)
+        index = optimal_cluster(x_diff)
+        link = link_color(x_diff,index)
 
-        labels = range(len(x_diff))
-        self.target = self.session_names[target_session]
-        plt.figure(figsize=(6,8))
+        # Reset self.session after clustering
+        self._session = [self.session[i] for i in index]
+
+        plt.figure(figsize=(5,8))
         plt.subplot(211)
         dendrogram( linkage(x_diff,'ward'), link_color_func=lambda k:link[k])
+        plt.xticks(rotation=90)
         plt.ylabel('Distance')
         plt.xlabel('Session ID')
         plt.title('Clustering of various sessions')
@@ -226,15 +188,19 @@ class EN:
         plt.xlabel('Time points (sample)')
         plt.ylabel('Amplitude (nA)')
         plt.title('Representative CV response in each session')
-        plt.gcf().text(0.02,0.85,f'Session ID' ,fontsize=8, weight='bold')
-        for i in labels:
-            plt.gcf().text(0.02,0.83-i*0.02,f'{i}: {self.session_names[i]}',fontsize=8)
-            if i in self.session_ID:
-                plt.plot(x_raw[i],'r')
+        for i in range(len(x_diff)):
+            if i in index:
+                plt.plot(self.x_BL[i],'r')
             else:
-                plt.plot(x_raw[i],'b')
-        plt.subplots_adjust(left=0.32,hspace=0.3)
-        plt.savefig(os.path.join(eval_path,f'{self.target}-Cluster.png'))
+                plt.plot(self.x_BL[i],'b')
+        plt.subplots_adjust(hspace=0.3)
+        plt.savefig(os.path.join(eval_path,f'{self.target}-Cluster-{self.__class__}.png'))
+
+    def distribution():
+        '''
+        Unfinished
+        '''
+        pass
 
     def resample(self,conc,sigma,size,base):
         '''
@@ -248,19 +214,16 @@ class EN:
             4. base: the round-up base, default 50 for high DA, 5-HT and NE, 5 for low DA.
         '''
 
-        self.conc  = conc
-        self.sigma = sigma
-        self.size  = size
-        self.base  = base
-        self.model_name = f'{self.target}-Model-{self.conc}-{self.sigma}-{self.size}'
+        self.conc = conc
+        self.model_name = f'{self.analyte}_{self.conc}'
 
         self.prepare('x')
         self.prepare('y')
 
         # Normal about the target concentration, and round to the base
         # (in the high DA situation, 50 nM).
-        s = np.random.normal(self.conc, self.sigma, self.size)
-        myround = lambda x: base*round(x/self.base)
+        s = np.random.normal(self.conc, sigma, size)
+        myround = lambda x: base*round(x/base)
         round_s = [myround(i) for i in s]
         sub_conc, counts = np.unique(round_s, return_counts=True)
 
@@ -282,62 +245,89 @@ class EN:
 
         self.x_resample = xx
         self.y_resample = yy
+        self.x_resample = np.append(self.x_resample,self.x[self.y==0],axis=0)
+        self.y_resample = np.append(self.y_resample,self.y[self.y==0])
 
-    def plot_distribution(self,resampled=False):
+
+class pH(NT):
+    '''
+    Prepare data for different pH.
+    '''
+
+    def __init__(self, target):
         '''
-        Plot the distribution of data, either before or after resampling.
+        INITIATE
+            1. self._session:   dict, the sessions associated with that analyte
+            2. self.target:     str,  the target session name
+            3. self.analyte:    str,  the analyte of interest, should be DA or 5-HT
+            4. self._cluster(): fxn,  performs clustering to choose sessions
         '''
-        # refer to View_models main()
-        if self.y_resample is None:
-            print('Data should be resampled before plotting.')
-            return None
+        self._session = calibration.Session.to_dict()
+        self.analyte  = 'pH'
+
+        # Add target into the sessions of pH
+        self.target   = target
+        self._session = list(calibration[calibration.Analyte==self.analyte].Session)
+        self._session.append(self.target)
+        self._cluster()
+
+    def resample(self,size):
+        '''
+        Prepare samples for the pH
+        '''
+        self.prepare('x')
+        self.prepare('y')
+
+        xx = np.empty((0,999))
+        if sum(self.y==0) > size:
+            np.random.seed(1)
+            ids = np.random.choice(len(self.x[self.y==0]),size,replace=False)
+            xx  = np.concatenate((xx,self.x[ids,:]))
         else:
-            if resampled:
-                data = self.y_resample
-                name = f'{self.target}-Dist-resampled-{self.conc}-{self.sigma}-{self.size}-{self.today}.png'
-            else:
-                data = self.y
-                name = f'{self.target}-Dist-{self.today}.png'
-        a,b = np.unique(data,return_counts=True)
-        plt.bar(a.astype(int).astype(str),b)
-        for i,v in enumerate(b):
-            plt.text(i, v+5, str(int(v)), ha='center', fontdict=dict(fontsize=8))
-        if resampled:
-            plt.subplots_adjust(left=0.3)
-            plt.gcf().text(0.02,0.9-i*0.04,'Used sessions',fontsize=7)
-            for i in range(len(self.session_names)):
-                plt.gcf().text(0.02,0.9-i*0.04,self.session_names[i],fontsize=7)
-        plt.ylabel('Count')
-        plt.xlabel('Concentration (nM)')
-        plt.xticks(rotation=90)
-        plt.savefig(os.path.join(eval_path,name))
+            xx  = np.concatenate((xx,self.x[self.y==0]))
 
-    def regression(self):
-        if self.y_resample is None:
-            raise ValueError('Data should be resampled before plotting.')
-        a,b = np.unique(self.y_resample,return_counts=True)
-        xx, yy = shuffle(self.x_resample, self.y_resample, random_state=0)
-        x_train,x_test,y_train,y_test = train_test_split(xx, yy, test_size=0.2)
-        l1_ratios = np.arange(1,0,-0.1)
-        cv = KFold(n_splits=10, shuffle=True)
-        model = ElasticNetCV(l1_ratio=l1_ratios, cv=cv, n_jobs=-1)
-        model.fit(x_train, y_train)
+        yy = np.zeros((xx.shape[0],)) # Always 0 for different pH
+        self.x_resample = xx
+        self.y_resample = yy
 
-        # Save all data
-        pickle.dump(model,open(os.path.join(model_path,f'{self.model_name}.sav'),'wb'))
-        np.save(os.path.join(model_path,f'{self.model_name}-xtest.npy'), x_test)
-        np.save(os.path.join(model_path,f'{self.model_name}-ytest.npy'), y_test)
-        np.save(os.path.join(model_path,f'{self.model_name}-xtrain.npy'), x_train)
-        np.save(os.path.join(model_path,f'{self.model_name}-ytrain.npy'), y_train)
 
-        if not check_status(pkl_path):
-            df = pd.DataFrame(columns=['Target','Conc','Sigma','Size','Date','Dist','Sessions'])
-        df = pd.read_pickle(pkl_path)
-        df.loc[f'{self.model_name}'] = [self.target,
-                                        self.conc,
-                                        self.sigma,
-                                        self.size,
-                                        self.today,
-                                        np.array([a,b]),
-                                        self.session_names]
-        df.to_pickle(pkl_path)
+def regression(*data):
+    '''
+    Build EN regression model with given data
+    '''
+
+    xx = np.empty((0,999))
+    yy = np.empty((0,))
+
+    for datum in data:
+        if not isinstance(datum,ENet.NT):
+            raise ValueError('Wrong input. Data should be instances of ElasticNet.')
+        else:
+            xx = np.concatenate((xx, datum.x_resample))
+            yy = np.concatenate((yy, datum.y_resample))
+
+    xx, yy = shuffle(xx, yy, random_state=0)
+    x_train,x_test,y_train,y_test = train_test_split(xx, yy, test_size=0.2)
+    l1_ratios = np.arange(1,0,-0.1)
+    cv = KFold(n_splits=10, shuffle=True)
+    model = ElasticNetCV(l1_ratio=l1_ratios, cv=cv, n_jobs=-1)
+    model.fit(x_train, y_train)
+    
+    # Save all data
+    # pickle.dump(model,open(os.path.join(model_path,f'{self.model_name}.sav'),'wb'))
+    # np.save(os.path.join(model_path,f'{self.model_name}-xtest.npy'), x_test)
+    # np.save(os.path.join(model_path,f'{self.model_name}-ytest.npy'), y_test)
+    # np.save(os.path.join(model_path,f'{self.model_name}-xtrain.npy'), x_train)
+    # np.save(os.path.join(model_path,f'{self.model_name}-ytrain.npy'), y_train)
+    #
+    # if not check_status(pkl_path):
+    #     df = pd.DataFrame(columns=['Target','Conc','Sigma','Size','Date','Dist','Sessions'])
+    # df = pd.read_pickle(pkl_path)
+    # df.loc[f'{self.model_name}'] = [self.target,
+    #                                 self.conc,
+    #                                 self.sigma,
+    #                                 self.size,
+    #                                 self.today,
+    #                                 np.array([a,b]),
+    #                                 self.session_names]
+    # df.to_pickle(pkl_path)

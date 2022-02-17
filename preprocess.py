@@ -47,13 +47,9 @@ plt.savefig(os.path.join(eval_path,f'Preprocess-{data.Session}.png'))
 print(f'Raw data saved as Preprocess-{data.Session}.png')
 
 ## Construct x (FSCV) and y (CONC)
-conc = np.zeros((16,3)) # 16 channels and 3 conditions (DA, 5-HT, pH)
-if data.Analyte == 'DA':
-    conc[1:,0] = data.loc[1:15]
-elif data.Analyte == '5-HT':
-    conc[1:,1] = data.loc[1:15]
-elif data.Analyte == 'pH':
-    conc[1:,2] = data.loc[1:15]
+conc = np.zeros((16,))
+if data.Analyte != 'pH':
+    conc[1:] = data.loc[1:15]
 
 ## Cleaning
 fscv_mod = [datum[:,750:1150] for datum in raw_data]
@@ -65,10 +61,9 @@ print('Finish manual cleaning.')
 
 ## Reconstruct data
 FSCV = np.concatenate(fscv_mod,axis=1)
-CONC = np.repeat(conc,400,axis=0)
+CONC = np.repeat(conc,400)
 
 ## Save files
-print(FSCV.shape, CONC.shape)
 if FSCV.shape[1] == CONC.shape[0]: # The final check
     np.save(os.path.join(data_path,f'{data.Session}_FSCV.npy'),FSCV.T)
     np.save(os.path.join(data_path,f'{data.Session}_CONC.npy'),CONC)
