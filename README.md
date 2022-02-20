@@ -1,51 +1,11 @@
-# Elastic-Net Regression Based Model
+# Elastic-Net Based Regression Model for Fast-scan Cyclic Voltammetry
 
+This repository is the official implementation of the elastic-net based regression model for fast-scan cyclic voltammetry. This package consists of a series of calibration data in the `Data/EN_data` folder.
 
+## Requirements:
+This repository is written in `python 3.7.11`. You will also need:
+- `xlwings` 0.24.9
+- `sklearn` 0.24.2
 
-### Package dependency:
-- xlwings
-- pickle
-- glob
-
-## Brief introduction
-
-"We sought to develop a novel approach that uses in vitro calibration data to fit a cross-validated penalized linear regression model (elastic net (EN)-based approach) for estimating dopamine concentrations from **non–background-subtracted** voltammograms."
-
-## Difference between Kishida's method and ours
-
-Kishida used MATLAB's cvglmnet package, but we're using python's sklearn models.
-The main two parameters we are looking for is alpha and lambda in his paper.
-However, the nomenclatures in MATLAB are different from those in python, which is compared below.
-
-| Kishida           	| Ours             	|
-|-------------------	|------------------	|
-| MATLAB (cvglmnet) 	| Python (sklearn) 	|
-| alpha             	| l1_ratio         	|
-| lambda            	| alpha            	|
-
-### Method for optimizing model parameters
-
-"The best α is determined via grid search (α for a range of λ);
-we searched α values between from 0 to 1 in 0.1 increments.
-We performed 10-fold cross validation within each training data subset
-and determined λ that minimizes the average mean squared error over 10 iterations
-for each α tested. We chose the (α, λ) pair that minimized the mean-squared error
-over the 10 iterations."
-
-## Data structure
-
-1. **FSCV data**: The data exported from HDCV. Each file corresponds to the FSCV response of a fixed concentration or condition (different pH value) of solutes such as DA, NE, or 5-HT. Since we are using Octaflow with 16 channels, there will be 16 distinct files of FSCV data for each session of calibration data.
-2. **EN data**: The FSCV data should be preprocessed according to Kishida's paper. A short snippet of data should be extracted from each file of the FSCV data. Also, all the 16 files are concatenated. We will also prepare a corresponding file of the concentration for each sample.
-3. **Resampled data**: For each session, there will be exactly one pair of EN data (E##_YYYYMMDD_FSCV.npy and E##_YYYYMMDD_CONC.npy). However, in order to train an EN model, we need multiple sessions of data to maximize the generalizability. Therefore, we concatenate the chosen EN_data as All_data, which still requires further processing to be qualified for EN modeling. After concatenation, we need to resample the data so that the concentration in y is normal about a specified value with a specified variance. More details can be found in Kishida paper's SI.
-
-## Workflow
-1. **Random_concentration.py**: We use it to determine the concentration profile of that in vitro session.
-2. **Octaflow_preprocess.py**: After collecting and exporting in vitro calibration data (aka the FSCV_data), we use it to transform them into EN_data. The preprocessing involves in an optional manual cleaning, which is to take actions for a run, either choosing a snippet other than 75-115 seconds of data or dropping the entire run.
-3. **Elastic_net.py**: After processing and exporting multiple npy files in the EN_data files, we are ready to perform EN regression.
-
-## Contact
-File any issues with the [issue tracker](https://github.com/Hung-Yun/EN_FSCV/issues). For any questions or problems, please contact [Hung-Yun Lu](https://github.com/Hung-Yun).
-
-## Reference
-- Kishida, K. T., Saez, I., Lohrenz, T., Witcher, M. R., Laxton, A. W., Tatter, S. B., White, J. P., Ellis, T. L., Phillips, P. E., & Montague, P. R. (2016). [Subsecond dopamine fluctuations in human striatum encode superposed error signals about actual and counterfactual reward](https://doi.org/10.1073/pnas.1513619112). Proceedings of the National Academy of Sciences of the United States of America, 113(1), 200–205.
-- Montague, P. R., & Kishida, K. T. (2018). [Computational Underpinnings of Neuromodulation in Humans](https://doi.org/10.1101/sqb.2018.83.038166). Cold Spring Harbor symposia on quantitative biology, 83, 71–82.
+## Model description
+This package is meant to infer concentrations of neurotransimeters (NTs), including dopamine (DA) and serotonin (5-HT), either *in vitro* or *in vivo*. The detailed methodology is described in [this paper](https://www.pnas.org/content/113/1/200). In brief, the fast-scan cyclic voltammetry (FSCV) response of some known concentrations of NT are measured using a carbon-fiber electrode. The non-background-subtracted FSCV responses and the corresponding concentrations are then stored for later training. To infer concentrations in new recorded data, we have to prepare a brief recording session (more than 40 seconds of steady signal) in phosphate-buffered saline besides the real experimental session. This baseline signal can be seen as the characteristic of the electrode of interest. The baseline signal will be clustered with the electrodes used in the calibration data set in order to select electrodes that are intrinsically similar. Those selected sessions will then be trained by the elastic-net regression algorithm, which would yield a list of models that target a specific concentration range. The `interchanging` algorithm will then constantly select the best model to infer concentration over time.

@@ -22,9 +22,8 @@ import warnings; warnings.filterwarnings("ignore")
 data_path  = 'Data/EN_data'
 fscv_path  = 'Data/FSCV_data'
 model_path = 'Data/EN_model'
-eval_path  = 'Data/Model_evaluation'
-cal_path   = 'Log/calibration_log.xlsx'
-pkl_path   = 'Log/EN.pkl'
+eval_path  = 'Model_evaluation'
+cal_path   = 'calibration_log.xlsx'
 
 ## Load calibration log
 calibration = pd.read_excel(cal_path)
@@ -198,9 +197,9 @@ class NT:
         plt.title('Representative CV response in each session')
         for i in range(len(x_diff)):
             if i in index:
-                plt.plot(self.x_BL[i],'r')
+                plt.plot(self.x_BL[i],'r',alpha=0.2)
             else:
-                plt.plot(self.x_BL[i],'b')
+                plt.plot(self.x_BL[i],'b',alpha=0.2)
         plt.subplots_adjust(hspace=0.3)
         plt.savefig(os.path.join(eval_path,f'{self.target}-Cluster-{self.__class__.__name__}.png'))
 
@@ -219,7 +218,7 @@ class NT:
             plt.xticks(rotation=45)
 
         if self.analyte != 'pH':
-            plt.figure(figsize=(12,4))
+            plt.figure(figsize=(16,4))
             plot_distribution(self.y)
             plt.title('Data distribution before resampling')
             plt.savefig(os.path.join(eval_path,f'{self.target}-Dist-before.png'))
@@ -323,7 +322,6 @@ class pH(NT):
 def regression(*data):
     '''
     Build EN regression model with given data.
-    The first input should be the main
     '''
 
     xx = np.empty((0,999))
@@ -339,7 +337,7 @@ def regression(*data):
             yy = np.concatenate((yy, datum.y_resample))
 
     if 'model_name' not in dir(data[0]):
-        raise AttributeError('The first input ')
+        raise AttributeError('The first input should be the instance of NT.')
 
     xx, yy = shuffle(xx, yy, random_state=0)
     x_train,x_test,y_train,y_test = train_test_split(xx, yy, test_size=0.2)
@@ -364,12 +362,12 @@ def regression(*data):
         f.write(f'\nModel name: {data[0].model_name}')
         for datum in data:
             f.write('\n----------------------')
-            f.write(f'\n{datum.analyte}: {datum.target}')
-            f.write(f'\nSession targeted: {datum.n_session}')
-            f.write(f'\nSession: {datum.session}')
+            f.write(f'\n > {datum.analyte}: {datum.target}')
+            f.write(f'\n > Number of session targeted: {datum.n_session}')
+            f.write(f'\n > Session: {datum.session}')
             if datum.analyte == 'pH':
-                f.write(f'\nResample profile: {datum.size}')
+                f.write(f'\n > Resample profile: {datum.size}')
             else:
-                f.write(f'\nResample profile: {datum.conc}, {datum.sigma}, {datum.size}')
-            f.write(f'\nShape of x_resample and y_resample: {datum.x_resample.shape}, {datum.y_resample.shape}')
-            f.write('\n\n\n\')
+                f.write(f'\n > Resample profile: {datum.conc}, {datum.sigma}, {datum.size}')
+            f.write(f'\n > Shape of x_resample and y_resample: {datum.x_resample.shape}, {datum.y_resample.shape}')
+            f.write('\n\n\n\n')

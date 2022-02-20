@@ -12,7 +12,7 @@ import os
 import datetime
 import sys
 
-cal_path   = 'Log/calibration_log.xlsx'
+cal_path   = 'calibration_log.xlsx'
 
 conc_range = {
             'High_DA': np.arange(1500,-1,-50),
