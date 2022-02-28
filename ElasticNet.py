@@ -22,14 +22,20 @@ import warnings; warnings.filterwarnings("ignore")
 data_path  = 'Data/EN_data'
 fscv_path  = 'Data/FSCV_data'
 model_path = 'Data/EN_model'
+pred_path  = 'Data/EN_predict'
 eval_path  = 'Model_evaluation'
 cal_path   = 'calibration_log.xlsx'
 
 ## Load calibration log
 calibration = pd.read_excel(cal_path)
-calibration['Date'] = calibration['Date'].dt.strftime('%Y%m%d')
-calibration['Session'] = calibration['Electrode']+'_'+calibration['Date']
-calibration['FSCV_data'] = calibration['Date']+'_'+calibration['Electrode']+'_Octaflow'
+calibration.Date = calibration.Date.dt.strftime('%Y%m%d')
+calibration['Session'] = calibration.Electrode+'_'+calibration.Date
+calibration['FSCV_data'] = None
+for i in range(len(calibration)):
+    if calibration.Analyte[i] in {'DA','pH','5-HT'}:
+        calibration.FSCV_data[i] = calibration.Date[i]+'_'+calibration.Electrode[i]+'_Octaflow'
+    else:
+        calibration.FSCV_data[i] = calibration.Date[i]+'_'+calibration.Electrode[i]+'_Exp'
 
 def check_status(file):
     if os.path.exists(file):
@@ -40,24 +46,11 @@ def check_status(file):
 
 class NT:
     '''
-    Prepare data for NT (different neurotransmitters)
+    Prepare data for different NT (neurotransmitters)
     '''
 
-    def __init__(self,target,n_session):
-        '''
-        INITIATE
-            1. self._session:   dict, the sessions associated with that analyte
-            2. self.target:     str,  the target session name
-            3. self.analyte:    str,  the analyte of interest, should be DA or 5-HT
-            4. self._cluster(): fxn,  performs clustering to choose sessions
-        '''
-
-        self.target    = target
-        self.n_session = n_session
+    def __init__(self):
         self._session  = calibration.Session.to_dict()
-        self.analyte   = calibration[calibration.Session==self.target].Analyte.values[0]
-        self.session   = list(calibration[calibration.Analyte==self.analyte].Session)
-        self._cluster()
 
     @property
     def target(self):
@@ -99,7 +92,7 @@ class NT:
         INPUT
             1. var: string of x or y or BL (baseline). The variable of interest to prepare for the data.
             2. diff: boolean default True. Indicate whether the resampled x needs to differentiate.
-               Usually used for visualization in the self._cluster() function.
+               Usually used for visualization in the self.cluster() function.
         '''
         if var not in ['x','y','BL']:
             raise ValueError('Input should be x, y, or BL (baseline).')
@@ -132,7 +125,7 @@ class NT:
         else:
             self.x_BL = result
 
-    def _cluster(self):
+    def cluster(self):
         '''
         Perform clustering for electrode selection.
         '''
@@ -222,10 +215,11 @@ class NT:
             plot_distribution(self.y)
             plt.title('Data distribution before resampling')
             plt.savefig(os.path.join(eval_path,f'{self.target}-Dist-before.png'))
-            plt.figure(figsize=(6,4))
-            plot_distribution(self.y_resample)
-            plt.title('Data distribution after resampling')
-            plt.savefig(os.path.join(eval_path,f'{self.target}-Dist-after.png'))
+            if 'y_resample' in dir(self):
+                plt.figure(figsize=(6,4))
+                plot_distribution(self.y_resample)
+                plt.title('Data distribution after resampling')
+                plt.savefig(os.path.join(eval_path,f'{self.target}-Dist-after.png'))
 
     def resample(self,conc,sigma,size,base):
         '''
@@ -278,28 +272,51 @@ class NT:
         self.y_resample = np.append(self.y_resample,sub_y[ids])
 
 
-class pH(NT):
+class Dopamine(NT):
     '''
-    Prepare data for different pH.
+    Cluster the session of interest with DA calibration data.
     '''
 
-    def __init__(self, target,n_session):
-        '''
-        INITIATE
-            1. self._session:   dict, the sessions associated with that analyte
-            2. self.target:     str,  the target session name
-            3. self.analyte:    str,  the analyte of interest, should be DA or 5-HT
-            4. self._cluster(): fxn,  performs clustering to choose sessions
-        '''
-        self._session = calibration.Session.to_dict()
-        self.analyte  = 'pH'
+    def __init__(self,target,n_session):
+        self.analyte   = 'DA'
         self.n_session = n_session
 
         # Add target into the sessions of pH
         self.target   = target
         self._session = list(calibration[calibration.Analyte==self.analyte].Session)
         self._session.append(self.target)
-        self._cluster()
+        self.cluster()
+
+class Serotonin(NT):
+    '''
+    Cluster the session of interest with DA calibration data.
+    '''
+
+    def __init__(self,target,n_session):
+        self.analyte   = '5-HT'
+        self.n_session = n_session
+
+        # Add target into the sessions of pH
+        self.target   = target
+        self._session = list(calibration[calibration.Analyte==self.analyte].Session)
+        self._session.append(self.target)
+        self.cluster()
+
+
+class pH(NT):
+    '''
+    Cluster the session of interest with pH calibration data.
+    '''
+
+    def __init__(self, target,n_session):
+        self.analyte   = 'pH'
+        self.n_session = n_session
+
+        # Add target into the sessions of pH
+        self.target   = target
+        self._session = list(calibration[calibration.Analyte==self.analyte].Session)
+        self._session.append(self.target)
+        self.cluster()
 
     def resample(self,size):
         '''
@@ -343,7 +360,7 @@ def regression(*data):
     x_train,x_test,y_train,y_test = train_test_split(xx, yy, test_size=0.2)
     l1_ratios = np.arange(1,0,-0.1)
     cv = KFold(n_splits=10, shuffle=True)
-    model = ElasticNetCV(l1_ratio=l1_ratios, cv=cv, n_jobs=-1)
+    model = ElasticNetCV(l1_ratio=l1_ratios, cv=cv, n_jobs=2)
     model.fit(x_train, y_train)
     print(f'Model performance: {model.score(x_test,y_test)}')
 
@@ -352,10 +369,10 @@ def regression(*data):
     if not os.path.exists(subfolder):
         os.mkdir(subfolder)
     pickle.dump(model,open(os.path.join(subfolder,f'{data[0].model_name}.sav'),'wb'))
-    np.save(os.path.join(subfolder,f'{data[0].model_name}-xtest.npy'), x_test)
-    np.save(os.path.join(subfolder,f'{data[0].model_name}-ytest.npy'), y_test)
-    np.save(os.path.join(subfolder,f'{data[0].model_name}-xtrain.npy'), x_train)
-    np.save(os.path.join(subfolder,f'{data[0].model_name}-ytrain.npy'), y_train)
+    # np.save(os.path.join(subfolder,f'{data[0].model_name}-xtest.npy'), x_test)
+    # np.save(os.path.join(subfolder,f'{data[0].model_name}-ytest.npy'), y_test)
+    # np.save(os.path.join(subfolder,f'{data[0].model_name}-xtrain.npy'), x_train)
+    # np.save(os.path.join(subfolder,f'{data[0].model_name}-ytrain.npy'), y_train)
 
     with open(os.path.join(subfolder,'readme.txt'),'a') as f:
         f.write('======================')

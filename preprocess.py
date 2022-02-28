@@ -60,6 +60,7 @@ def exp():
         if len(exp_name) == 0:
             break
         files    = glob.glob(os.path.join(fscv_path,data.FSCV_data,f'{exp_name}.hdcv*Color.txt'))
+        files.sort(key=lambda x: int(x.split("/")[-1].split()[0].replace(f'{exp_name}.hdcv','')))
         raw_data = [np.loadtxt(files[i]) for i in range(len(files))]
         FSCV = np.concatenate(raw_data,axis=1)
         np.save(os.path.join(pred_path,f'{data.Session}_{exp_name}.npy'),FSCV.T)
