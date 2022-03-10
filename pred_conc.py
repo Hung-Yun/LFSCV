@@ -34,7 +34,7 @@ def load_exp(filename):
             raise ValueError('Wrong shape of file.')
         return np.diff(data) * 100000
 
-def WRONG_load_models(target):
+def load_models(target):
     '''
     Load the models specific to the electrode used for the exp file.
 
@@ -49,7 +49,7 @@ def WRONG_load_models(target):
     files.sort(key=lambda x: int(x.split("_")[-1].split(".")[0]))
     model = [pickle.load(open(file,'rb')) for file in files]
     conc  = [int(file.split("_")[-1].split(".")[0]) for file in files]
-    model_dict = {key:value for key in conc for value in model}
+    model_dict = {key:value for key, value in zip(conc,model)}
     return model_dict
 
 

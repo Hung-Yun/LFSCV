@@ -387,4 +387,5 @@ def regression(*data):
             else:
                 f.write(f'\n > Resample profile: {datum.conc}, {datum.sigma}, {datum.size}')
             f.write(f'\n > Shape of x_resample and y_resample: {datum.x_resample.shape}, {datum.y_resample.shape}')
-            f.write('\n\n\n\n')
+            f.write(f'\n > Overall model performance on its test set: {model.score(x_test,y_test)}')
+            f.write('\n\n\n')

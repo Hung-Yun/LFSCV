@@ -19,7 +19,7 @@ eval_path   = EN.eval_path
 pred_path   = EN.pred_path
 calibration = EN.calibration
 
-def exp():
+def experiment():
 
     # ------ Preprocess clustering data ------
 
@@ -60,14 +60,15 @@ def exp():
         if len(exp_name) == 0:
             break
         files    = glob.glob(os.path.join(fscv_path,data.FSCV_data,f'{exp_name}.hdcv*Color.txt'))
-        files.sort(key=lambda x: int(x.split("/")[-1].split()[0].replace(f'{exp_name}.hdcv','')))
+        if len(files) > 1:
+            files.sort(key=lambda x: int(x.split("/")[-1].split()[0].replace(f'{exp_name}.hdcv','')))
         raw_data = [np.loadtxt(files[i]) for i in range(len(files))]
         FSCV = np.concatenate(raw_data,axis=1)
         np.save(os.path.join(pred_path,f'{data.Session}_{exp_name}.npy'),FSCV.T)
         print(f'Data saved in {data.Session}_{exp_name}.npy')
 
 
-def oct():
+def octaflow():
 
     # ------ Preprocess Octaflow data ------
 
@@ -140,4 +141,4 @@ if __name__ == '__main__':
     parser.add_argument('type',type=str,choices=['octaflow','experiment'],
         help='Determine whether to process the calibration data or experimental data.')
     args = parser.parse_args()
-    oct() if args.type == 'octaflow' else exp()
+    octaflow() if args.type == 'octaflow' else experiment()
