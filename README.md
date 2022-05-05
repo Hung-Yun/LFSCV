@@ -12,6 +12,11 @@ This package is meant to infer concentrations of neurotransimeters (NTs), includ
 
 ![Illustration](https://github.com/Hung-Yun/EN_FSCV/blob/main/FSCV%20illustration.png)
 
+## General workflow
+
+### Preprocessing data
+
+
 ## Contact
 File any issues with the [issue tracker](https://github.com/Hung-Yun/EN_FSCV/issues). For any questions or problems, please contact [Hung-Yun Lu](https://github.com/Hung-Yun).
 
