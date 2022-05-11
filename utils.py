@@ -27,7 +27,7 @@ def baseline():
     
     baseline_name = []
     for session in session_names:
-        baseline_name.append(os.path.join(FSCV_data,session,session+'_PBS.hdcv Color.txt'))
+        baseline_name.append(os.path.join(FSCV_data,session,session[:-3]+'_PBS.hdcv Color.txt'))
         
     baseline_data = {}
     for i in range(len(session_names)):
@@ -39,14 +39,10 @@ def baseline():
 
 def all_trials(session):
     
-    '''
-    This is written for high concentration range of DA.
-    '''
-    
     trial_header = os.path.join(FSCV_data,session,session)
-    trials = [trial_header+'_PBS']
+    trials = [trial_header[:-3]+'_PBS']
     for i in range(1,31):
-        trials.append(trial_header+f'_DA_{i*50}') # << High range of DA
+        trials.append(trial_header+f'_{i*50}')
     trials = [i+'.hdcv Color.txt' for i in trials]
     
     if bool([os.path.exists(trial) for trial in trials]):

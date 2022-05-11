@@ -33,9 +33,9 @@ sessions = [
             # '20220420_E57',
             # '20220422_E77',
             # '20220425_E78',
-            '20220426_E81',
-            '20220427_E82',
-            '20220428_E77',
+            '20220426_E81_DA',
+            '20220427_E82_DA',
+            '20220428_E77_DA',
             '20220429_E82',
             '20220430_E86',
             '20220502_E84'
@@ -45,7 +45,7 @@ sessions = [
 def prepare_samples(session, n_sample, low_bound, high_bound):
     
     '''
-    This is written for high concentration range of DA.
+    This is written for high concentration range of DA/HT.
     '''
     
     trials = all_trials(session)
@@ -74,10 +74,14 @@ def regression(x, y):
     
     xx, yy = shuffle(x, y)
     x_train,x_test,y_train,y_test = train_test_split(xx, yy, test_size=0.2)
-    l1_ratios = [0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1]
-    cv = KFold(n_splits=10, shuffle=True)
-    model = ElasticNetCV(l1_ratio=l1_ratios, cv=cv, 
-                         n_jobs=2, max_iter=4000,n_alphas=25,fit_intercept=True)
+
+    model = ElasticNetCV(l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1], 
+                         cv=KFold(n_splits=10, shuffle=True), 
+                         alphas=np.linspace(0,1,11),
+                         n_jobs=2, 
+                         max_iter=4000,
+                         fit_intercept=True)
+    
     model.fit(x_train, y_train)
     score = model.score(x_test,y_test)
     
@@ -88,7 +92,6 @@ def regression(x, y):
         y_pred = np.concatenate((y_pred, model.predict(x_test[y_test==i])))
     
     return model, y_true, y_pred, score
-
 
 
 def fit():
@@ -104,6 +107,7 @@ def fit():
     pickle.dump(model,open(os.path.join(EN_data,f'{model_name}.sav'),'wb'))
     
     return model, model_name, y_true, y_pred, score
+
 
 def plot_model(model, model_name, y_true, y_pred, score):
     real = np.arange(low_bound-20,high_bound+20,5)

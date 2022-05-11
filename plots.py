@@ -58,6 +58,20 @@ def baseline_BG():
     plt.xlabel('Time (ms)')
     plt.title('Baseline response in different sessions, BG')
     plt.show()
+    
+    
+def baseline_analysis(session):
+    for name,fscv in baseline.items():
+        if name != session:
+            plt.plot(np.diff(fscv)*100,c='k',alpha=0.2)
+        else:
+            plt.plot(np.diff(fscv)*100,c='r')
+
+    plt.xticks(np.linspace(0,998,6),np.linspace(0,10,6))
+    plt.ylabel('Current change rate (nA/ms)')
+    plt.xlabel('Time (ms)')
+    plt.title(f'Session {session}')
+    plt.show()
 
 def color_SingleTrial(trial):
     plt.imshow(np.flipud(trial),aspect='auto')
@@ -106,7 +120,7 @@ def derivative_AllTrials(session,files):
 def session_plots(key):
     
     '''
-    key is the session name: yyyymmdd_E##
+    key is the session name: yyyymmdd_E##_DA/HT
     '''
     
     files  = [np.loadtxt(i) for i in utils.all_trials(key)]
@@ -123,3 +137,15 @@ def session_plots(key):
     utils.conc_colorbar(50,1500)
     plt.show()
     
+
+key = '20220422_E77_DA'
+
+# files  = [np.loadtxt(i) for i in utils.all_trials(key)]
+
+# derivative_AllTrials(key,files)
+# utils.conc_colorbar(50,1500)
+# plt.show()
+
+session_plots(key)
+
+
