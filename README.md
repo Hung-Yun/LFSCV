@@ -1,20 +1,14 @@
-# Elastic-Net Based Regression Model for Fast-scan Cyclic Voltammetry
+# Lasso Regression Model for Fast-scan Cyclic Voltammetry
 
-This repository is the official implementation of the elastic-net based regression model for fast-scan cyclic voltammetry. This package consists of a series of calibration data in the `Data/EN_data` folder.
+## Overview of FSCV
+Fast-scan cyclic voltammetry (FSCV) has been used to estimate the concentrations of neurotransmitters, such as dopamine (DA) and serotonin (5-HT), with high sensitivity and specificity. During the  oxidation and reduction process, the chemical of interest generates current at specific voltages whose amplitude is positively correlated to the chemical's concentration. In this project, we manufactured carbon-fiber based microelectrodes (CFEs) to capture the concentrations of DA and 5-HT in the PBS. Our goal was to generate a robust computational model that can recover the true concentrations from electrochemical recordings.
 
-## Requirements:
-This repository is written in `python 3.8.8`. You will also need `sklearn 0.24.2`.
+## Development of the LFSCV model
+Traditionally, the FCSV model is processed using a principal component regression (PCR) [1], which combines principal component analysis and least-square regression. However, this method does not consider the drifting nature of the FSCV recordings. The principal components identified in the beginning of a session may not accurately reflect the true concentrations in the late phase of a session. Also, this method is preprocessed with background subtraction. However, there is no strict definition of a background, leaving this method rather arbitrary [2]. Here, we present a non-background-subtracted model that is based on Lasso regression, **LFSCV**. This method treats the recording samples at different voltages as independent variables. By using a regularized elastic-net regression, the model (1) identifies variables that are less drifting, (2) penalizes variables that are highly correlated, and (3) is free from arbitrary background subtractions.
 
-## Model description
-
-
-## General workflow
-
-
-## Contact
-File any issues with the [issue tracker](https://github.com/Hung-Yun/EN_FSCV/issues). For any questions or problems, please contact [Hung-Yun Lu](https://github.com/Hung-Yun).
-
+## Main results
+We collects 10 sessions of recordings in different DA concentrations ranging from 0-1500 nM in PBS, and 7 sessions in 0-1500 nM of 5-HT, and 8 sessions of PBS with different pH values. A model can be trained and fine-tuned in the `Lasso-Analysis.py` file. Example model performance is stored in the `Data` folder. From the figure below, we can see that the DA model accurately capture the DA concentrations and is not confused with the 5-HT and vice versa.
+![trace](./img/LassoModel.png)
 ## Reference
-- Kishida, K. T., Saez, I., Lohrenz, T., Witcher, M. R., Laxton, A. W., Tatter, S. B., White, J. P., Ellis, T. L., Phillips, P. E., & Montague, P. R. (2016). [Subsecond dopamine fluctuations in human striatum encode superposed error signals about actual and counterfactual reward](https://doi.org/10.1073/pnas.1513619112). Proceedings of the National Academy of Sciences of the United States of America, 113(1), 200–205.
-- Montague, P. R., & Kishida, K. T. (2018). [Computational Underpinnings of Neuromodulation in Humans](https://doi.org/10.1101/sqb.2018.83.038166). Cold Spring Harbor symposia on quantitative biology, 83, 71–82.
-- Bang, D., Kishida, K. T., Lohrenz, T., White, J. P., Laxton, A. W., Tatter, S. B., Fleming, S. M., & Montague, P. R. (2020). [Sub-second Dopamine and Serotonin Signaling in Human Striatum during Perceptual Decision-Making. Neuron](https://doi.org/10.1016/j.neuron.2020.09.015), 108(5), 999–1010.e6. 
+[1] Fast Scan Cyclic Voltammetry: Chemical Sensing in the Brain and Beyond. Roberts, 2017 Anal Chem
+[2] Failure of Standard Training Sets in the Analysis of Fast-Scan Cyclic Voltammetry Data. Johnson, 2016 ACS Chemical Neuroscience
