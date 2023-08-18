@@ -10,5 +10,5 @@ Traditionally, the FCSV model is processed using a principal component regressio
 We collects 10 sessions of recordings in different DA concentrations ranging from 0-1500 nM in PBS, and 7 sessions in 0-1500 nM of 5-HT, and 8 sessions of PBS with different pH values. A model can be trained and fine-tuned in the `Lasso-Analysis.py` file. Example model performance is stored in the `Data` folder. From the figure below, we can see that the DA model accurately capture the DA concentrations and is not confused with the 5-HT and vice versa.
 ![trace](./img/LassoModel.png)
 ## Reference
-[1] Fast Scan Cyclic Voltammetry: Chemical Sensing in the Brain and Beyond. Roberts, 2017 Anal Chem
+[1] Fast Scan Cyclic Voltammetry: Chemical Sensing in the Brain and Beyond. Roberts, 2017 Anal Chem\
 [2] Failure of Standard Training Sets in the Analysis of Fast-Scan Cyclic Voltammetry Data. Johnson, 2016 ACS Chemical Neuroscience
